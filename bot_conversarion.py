@@ -1,6 +1,9 @@
+from curses.ascii import isdigit
 import logging
 from tokenize import Token
 from config import TOKEN
+from math import *
+from cmath import *
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -18,42 +21,81 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Определяем константы этапов разговора
-CHOICE, R_NUMB, C_NUMB, CALC,RES = range(5)
+CHOICE, R_NUMB, C_NUMB, CALC, MATH_OP = range(5)
 # функция обратного вызова точки входа в разговор
 def start(update, _):
-    # Начинаем разговор с вопроса
+    # Старт бота , запрос выбора числа
     update.message.reply_text(
         'Меня зовут Бот-счетовод. Давайте считать?\n '
         'Команда /exit, чтобы прекратить разговор.\n'
-        'Выбери калькулятор: R - рациональные числа или C - комплексные числа ?')
+        'Выбери калькулятор: р - рациональные числа или к - комплексные числа ?')
     return CHOICE
-def choice(update,_)
+def choice(update,_):
 # обработка выбора калькулятора
 # просим ввести ввести числа :
 # if R (введи рац числа)
 # if C (введи компл числа)
-    return  R_NUMB, C_NUMB
+    text = update.message.text
+    if text == 'р':
+        logs.logger(' вычисления рациональных чисел')
+        update.message.reply_text('Введите два числа через пробел: ')
+    if text == 'к':
+        logs.logger(' вычисления комплексных чисел ')
+        update.message.reply_text('Введите значения a и b для a+bj\n',  
+                                '(например: 3 4 8 2 -> 3+4j и 8+2о): ')
+    else:
+        logs.logger(f'Сделан неверный выбор - {text}. Повторный запрос. ', 'False')
+        update.message.reply_text('некорректный ввод. повторите свой выбор ')
+        return CHOICE
 #   
-def ratio(update,_)
+def ratio(update,_):
+    text = update.message.text
+    items = text.split()
+    if items == 2:
+        x = float(items[1])
+        y = float(items[2])
+        logs.logger(f'Сделан неверный выбор - {text}. Повторный запрос. ', 'False')
+        update.message.reply_text('некорректный ввод. повторите ')   
+    return R_NUMB
 # просим ввести числа  
 # проверка на флоат
-# просим ввести знак вычисления
-    return CALC
-def compl(update,_)
-# просим ввести числа
-# проверка на флоат
-# просим ввести знак вычисления
-    return CALC
 
-def calc(update,_)
-# обработка знака вычисления
-# if + == sum res
-# if - == minus res
-# if * == mult res
-# if / == div res
+def compl(update,_):
+    text = update.message.text.split(' ')
+    items = text.split()
+    logs.logger(f'пользователь ввел числа: {x},{y}')
+     
+    if items.isdigit() and items == 4:
+            x = complex(items[1], items[2])
+            y = complex(items[3], items[4])
+            logs.logger(f'пользователь ввел xbckf: {x},{y}')
+            update.message.reply_text('введите знак вычисления: + - / * ')  
+    return C_NUMB
+# просим ввести числа
+# формируем компл числа
+# просим ввести знак вычисления
+global x
+global y
+
+def math_op():
+    #global X
+    #global Y
+    text = update.message.text
+    if '+'  in text:
+        logs.logger(' вычисления рациональных чисел')
+        update.message.reply_text(f'{x} + {y} = {x+y}: ')
+    if '-'  in text:
+        logs.logger(' вычисления рациональных чисел')
+        update.message.reply_text(f'{x} - {y} = {x-y}: ')
+    if '/'  in text:
+        logs.logger(' вычисления рациональных чисел')
+        update.message.reply_text(f'{x} / {y} = {x/y}: ')
+    if '*'  in text:
+        logs.logger(' вычисления рациональных чисел')
+        update.message.reply_text(f'{x} * {y} = {x*y}: ')
     return RES
 
-def exit(update, _)
+def exit(update, _):
     update.message.reply_text(
             'ну ты заходи , если что \n ')
 
@@ -72,18 +114,13 @@ if __name__ == '__main__':
         # этапы разговора, каждый со своим списком обработчиков сообщений
         states={
 
-            CHOICE: [CommandHandler(Filters.), calc)], #надо заменить логируемые данные
-            R_NUMB: [MessageHandler(Filters.photo, r_numb), #надо заменить логируемые данные
-            C_NUMB: [
-                MessageHandler(Filters.location, c_numb), #надо заменить логируемые данные
-                CommandHandler('skip', skip_location),], #надо заменить логируемые данные
-            
-            CALC: [MessageHandler(Filters.text?????, )], #надо заменить логируемые данные
-            RES: [MessageHandler(Filters.text?????, )], #надо заменить логируемые данные
+            CHOICE: [MessageHandler(Filters.text, choice)], 
+            R_NUMB: [MessageHandler(Filters.ratio, ratio)], 
+            C_NUMB: [MessageHandler(Filters.compl, compl)],
+            MATH_OP: [MessageHandler(Filters.math_op, math_op)],
         },
         # точка выхода из разговора
-        fallbacks=[CommandHandler('exit', exit)],
-    )
+        fallbacks=[CommandHandler('exit', exit)])
 
     # Добавляем обработчик разговоров `conv_handler`
     dispatcher.add_handler(conv_handler)
